@@ -1,0 +1,41 @@
+#Program 4 
+! pip install cohere gensim 
+import cohere 
+import gensim.downloader as api 
+# Initialize the Cohere client 
+co = cohere.Client("AtqQj4TNdz0nmJtq0NC2FhDaCd7ncAtSCw9gAcfR") 
+print("Loading word embeddings ... ") 
+model = api.load("glove-wiki-gigaword-100") 
+print("Model loaded successfully.") 
+ 
+prompt = "write an essay on global warming" 
+ 
+def get_first_enriched_prompt(prompt, topn=3): 
+    for word in prompt.split(): 
+        try: 
+            # strip punctuation and lowercase to match vocabulary 
+            clean_word = word.strip('.,!?').lower() 
+            similar_words = model.most_similar(clean_word, topn=topn) 
+             
+            # Use the most similar word found 
+            if similar_words: 
+                sim, score = similar_words[0] # Grab the highest scoring similar word 
+                enriched = prompt.replace(word, sim) 
+                return enriched 
+        except Exception as e: 
+            continue 
+    return None 
+ 
+def get_response(text): 
+    try: 
+        # Fixed: Changed deprecated model to 'command-r-08-2024' 
+        return co.chat(model="command-r-08-2024", message=text).text.strip() 
+    except Exception as e: 
+        return f"Error: {e}" 
+print(f"\nOriginal Prompt:\n{prompt}\nResponse: \n{get_response(prompt)}") 
+enriched_prompt = get_first_enriched_prompt(prompt) 
+if enriched_prompt: 
+print(f"\nEnriched Prompt: \n{enriched_prompt}\nResponse: 
+\n{get_response(enriched_prompt)}") 
+else: 
+print("\nNo enriched prompt could be generated.") 
