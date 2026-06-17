@@ -1,0 +1,31 @@
+#Program 7 
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM 
+ 
+# 1. Load the model and tokenizer (No pipeline!) 
+model_name = "t5-small" 
+tokenizer = AutoTokenizer.from_pretrained(model_name) 
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name) 
+ 
+text = input("Enter text to summarize:\n") 
+ 
+if len(text.split()) < 30: 
+    print("Text is too short to summarize.") 
+else: 
+    # 2. Add the required prefix for T5 
+    input_text = "summarize: " + text 
+     
+    # 3. Convert the text into token IDs that the model can read 
+    inputs = tokenizer(input_text, return_tensors="pt", max_length=512, truncation=True) 
+     
+    # 4. Generate the summary tokens directly from the model 
+    outputs = model.generate( 
+        inputs["input_ids"],  
+        max_new_tokens=50,  
+        min_new_tokens=30,  
+        do_sample=False 
+    ) 
+     
+    # 5. Decode the generated tokens back into readable human text 
+    summary = tokenizer.decode(outputs[0], skip_special_tokens=True) 
+     
+    print("\nSummary:", summary) 
