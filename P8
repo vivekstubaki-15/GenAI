@@ -1,0 +1,23 @@
+#Program 8 
+!pip install langchain cohere langchain-community langchain-core langchain-cohere 
+from langchain_community.document_loaders import TextLoader  
+from langchain_core.prompts import PromptTemplate  
+# 1. Import ChatCohere from the official partner package 
+from langchain_cohere import ChatCohere  
+file_path = "sample text.txt"  
+text = TextLoader(file_path).load()[0].page_content  
+prompt = PromptTemplate( 
+input_variables=["text"],  
+template="Summarize this text: \n\n{text} \n\nSummary:" 
+)  
+# 2. Use ChatCohere instead of the deprecated Cohere class 
+# (Paste your API key in here!) 
+llm = ChatCohere( 
+cohere_api_key="AtqQj4TNdz0nmJtq0NC2FhDaCd7ncAtSCw9gAcfR",  
+model="command-r-08-2024",  
+temperature=0.7 
+)  
+chain = prompt | llm  
+summary = chain.invoke({"text": text})  
+# 3. Chat models return an 'AIMessage' object, so we extract the text using .content 
+print("\nSummary: \n", summary.content) 
