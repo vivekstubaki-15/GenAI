@@ -1,0 +1,36 @@
+#Program 10 
+!pip install pymupdf faiss-cpu sentence-transformers 
+ 
+import fitz, faiss, numpy as np 
+from sentence_transformers import SentenceTransformer 
+from sklearn.metrics.pairwise import cosine_similarity 
+ 
+# --- NEW CHUNKING METHOD --- 
+chunks = [] 
+for page in fitz.open("ipc_act.pdf"): 
+    # get_text("blocks") naturally separates text by paragraphs 
+    for block in page.get_text("blocks"): 
+        text_block = block[4].strip() 
+        # Filter out tiny chunks like page numbers or stray characters 
+        if len(text_block) > 50:  
+            chunks.append(text_block.replace('\n', ' ')) 
+# --------------------------- 
+ 
+model = SentenceTransformer("all-MiniLM-L6-v2") 
+emb = model.encode(chunks, convert_to_numpy=True).astype("float32") 
+idx = faiss.IndexFlatL2(emb.shape[1]) 
+idx.add(emb) 
+ 
+print("IPC chatbot ready. Type 'bye' to exit.") 
+while True: 
+    q = input("You: ") 
+    if q.lower() == "bye": 
+        print("Bot: Goodbye!"); break 
+         
+    qe = model.encode([q], convert_to_numpy=True).astype("float32") 
+    D, I = idx.search(qe, 1) 
+     
+    # Using the correct I[0][0] index we fixed earlier! 
+    sim = cosine_similarity(qe, [emb[I[0][0]]])[0][0]  
+     
+    print("Bot: ", chunks[I[0][0]] if sim > 0.6 else "No relevant info found.")
